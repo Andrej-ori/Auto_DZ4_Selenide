@@ -1,27 +1,22 @@
 package ru.ntology.web;
 
-import com.codeborne.selenide.Condition.*;
 import com.codeborne.selenide.Configuration;
-import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.Keys;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import static com.codeborne.selenide.Condition.*;
-import static com.codeborne.selenide.Selectors.*;
 import static com.codeborne.selenide.Selenide.*;
 import static java.time.Duration.ofSeconds;
 
-public class FirstTaskPositiveTest {
-
-    SelenideElement notification = $x("//div[@data-test-id='notification']");
+public class FirstTasNegativeTest {
 
     LocalDate today = LocalDate.now();
     LocalDate newDate = today.plusDays(5);
+    LocalDate invalidDate = today.plusDays(-5);
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
 
@@ -54,11 +49,11 @@ public class FirstTaskPositiveTest {
 // 7 найти кнопку "Забронировать"
 //  7.1 кликнуть на кнопку "забронировать"
 // 8 подождать (не более 15 секунд)
-// 9 должно появиться окно сообщающее об успехе
-// 10 проверить что дата брони соответствует заполненой дате
+// 9 под полем город должно появиться сообщение об ошибке
+// 10 проверить что сообщение об ошибке  соответствует "Доставка в выбранный город недоступна"
 
     @Test
-    public void positiveTest(){
+    public void negativeTestСityFalse(){
 
         $("[data-test-id='city'] input").setValue("Баку");
         $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
@@ -68,11 +63,151 @@ public class FirstTaskPositiveTest {
         $("[data-test-id='agreement']").click();
         $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
 
-        $("[data-test-id='city'] [input__sub]").should(text("Доставка в выбранный город недоступна"));
-//        notification.should(visible, ofSeconds(15));
-//        notification.$x(".//div[@class='notification__title']").should(text("Успешно"));
-//        notification.$x(".//div[@class='notification__content']").should(text("Встреча успешно забронирована на "
-//                + newDate.format(formatter)));
+       $x(".//span[@data-test-id='city']").should(cssClass("input_invalid"));
+       $x(".//span[@data-test-id='city']//child::span[@class='input__sub']").should(visible, text("Доставка в выбранный город недоступна"));
 
     }
+
+    @Test
+    public void negativeTestNoCity() {
+
+        $("[data-test-id='city'] input").setValue("");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys(formatter.format(newDate));
+        $("[data-test-id='name'] input").setValue("Иванов Иван");
+        $("[data-test-id='phone'] input").setValue("+79991234567");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+//        $x(".//span[@data-test-id='city']").should(cssClass("input_invalid"));
+        $x(".//span[@data-test-id='city']//child::span[@class='input__sub']").should(visible, text("Поле обязательно для заполнения"));
+    }
+
+    @Test
+    public void negativeTestInvalidDate() {
+
+        $("[data-test-id='city'] input").setValue("Магадан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys(formatter.format(invalidDate));
+        $("[data-test-id='name'] input").setValue("Иванов Иван");
+        $("[data-test-id='phone'] input").setValue("+79991234567");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//span[@data-test-id='date']//child::span[@class='input__sub']").should(visible, text("Заказ на выбранную дату невозможен"));
+    }
+
+    @Test
+    // ввод несуществующей даты (например 32 число)
+    public void negativeTestInvalidDate2() {
+
+        $("[data-test-id='city'] input").setValue("Магадан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys("32.01.2023");
+        $("[data-test-id='name'] input").setValue("Иванов Иван");
+        $("[data-test-id='phone'] input").setValue("+79991234567");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//span[@data-test-id='date']//child::span[@class='input__sub']").should(visible, text("Неверно введена дата"));
+    }
+
+    @Test
+    public void negativeTestTodayData() {
+
+        $("[data-test-id='city'] input").setValue("Магадан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys(formatter.format(today));
+        $("[data-test-id='name'] input").setValue("Иванов Иван");
+        $("[data-test-id='phone'] input").setValue("+79991234567");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//span[@data-test-id='date']//child::span[@class='input__sub']").should(visible, text("Заказ на выбранную дату невозможен"));
+    }
+
+    @Test
+    public void negativeTestNoDate() {
+
+        $("[data-test-id='city'] input").setValue("Магадан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+
+        $("[data-test-id='name'] input").setValue("Иванов Иван");
+        $("[data-test-id='phone'] input").setValue("+79991234567");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//span[@data-test-id='date']//child::span[@class='input__sub']").should(visible, text("Неверно введена дата"));
+    }
+
+    @Test
+    public void negativeTestInvalidName() {
+
+        $("[data-test-id='city'] input").setValue("Магадан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys(formatter.format(newDate));
+        $("[data-test-id='name'] input").setValue("Ivanov Ivan");
+        $("[data-test-id='phone'] input").setValue("+79991234567");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//span[@data-test-id='name']//child::span[@class='input__sub']").should(visible, text("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы."));
+    }
+
+    @Test
+    public void negativeTestInvalidNameЁ() {
+
+        $("[data-test-id='city'] input").setValue("Магадан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys(formatter.format(newDate));
+        $("[data-test-id='name'] input").setValue("Иванова Алёна");
+        $("[data-test-id='phone'] input").setValue("+79991234567");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//span[@data-test-id='name']//child::span[@class='input__sub']").should(visible, text("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы."));
+    }
+
+    @Test
+    public void negativeTestInvalidTel() {
+
+        $("[data-test-id='city'] input").setValue("Магадан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys(formatter.format(newDate));
+        $("[data-test-id='name'] input").setValue("Иванов Иван");
+        $("[data-test-id='phone'] input").setValue("+7999");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//span[@data-test-id='phone']//child::span[@class='input__sub']").should(visible, text("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678."));
+    }
+
+    @Test
+    public void negativeTestInvalidTelNotPlus() {
+
+        $("[data-test-id='city'] input").setValue("Магадан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys(formatter.format(newDate));
+        $("[data-test-id='name'] input").setValue("Иванов Иван");
+        $("[data-test-id='phone'] input").setValue("89991234567");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//span[@data-test-id='phone']//child::span[@class='input__sub']").should(visible, text("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678."));
+    }
+
+    @Test
+    public void negativeTestEmptyCheckbox() {
+
+        $("[data-test-id='city'] input").setValue("Магадан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys(formatter.format(newDate));
+        $("[data-test-id='name'] input").setValue("Иванов Иван");
+        $("[data-test-id='phone'] input").setValue("+79991234567");
+
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//label[@data-test-id='agreement']").should(cssClass("input_invalid"));
+    }
+
 }
