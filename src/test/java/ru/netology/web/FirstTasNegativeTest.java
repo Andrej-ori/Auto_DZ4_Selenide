@@ -1,4 +1,4 @@
-package ru.ntology.web;
+package ru.netology.web;
 
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.SelenideElement;
@@ -65,6 +65,22 @@ public class FirstTasNegativeTest {
 
        $x(".//span[@data-test-id='city']").should(cssClass("input_invalid"));
        $x(".//span[@data-test-id='city']//child::span[@class='input__sub']").should(visible, text("Доставка в выбранный город недоступна"));
+
+    }
+
+    @Test
+    public void negativeTestСityTypo(){
+
+        $("[data-test-id='city'] input").setValue("Магодан");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id='date'] input").sendKeys(formatter.format(newDate));
+        $("[data-test-id='name'] input").setValue("Иванов Иван");
+        $("[data-test-id='phone'] input").setValue("+79991234567");
+        $("[data-test-id='agreement']").click();
+        $x(".//span[contains(text(), 'Забронировать')]//ancestor::button").click();
+
+        $x(".//span[@data-test-id='city']").should(cssClass("input_invalid"));
+        $x(".//span[@data-test-id='city']//child::span[@class='input__sub']").should(visible, text("Доставка в выбранный город недоступна"));
 
     }
 

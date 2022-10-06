@@ -1,4 +1,4 @@
-package ru.ntology.web;
+package ru.netology.web;
 
 import com.codeborne.selenide.Condition.*;
 import com.codeborne.selenide.Configuration;
